@@ -1,0 +1,437 @@
+/* ==========================================================================
+   1. CONFIGURACIÓN GENERAL Y FONDO
+   ========================================================================== */
+body {
+    margin: 0;
+    padding: 0;
+    width: 100vw;
+    height: 100vh;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    background-color: #1a1a1a;
+    overflow: hidden;
+}
+
+
+/* ==========================================================================
+   2. LOBBY: SELECCIÓN DE ASIENTOS
+   ========================================================================== */
+/* El contenedor maestro del Lobby */
+#pantalla-inicio {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    width: 100vw;
+    height: 100vh;
+    background-color: #1a1a1a;
+    color: white; 
+    text-align: center;
+    z-index: 100;
+}
+
+/* Ocultar el Lobby solo cuando el juego esté activo */
+body.juego-activo #pantalla-inicio {
+    display: none !important;
+}
+
+.mini-mesa-contenedor {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 15px;
+    background: #2e7d32;
+    padding: 20px;
+    border-radius: 15px;
+    border: 5px solid #5d4037;
+    margin: 20px auto;
+    width: fit-content;
+}
+
+.fila-asientos {
+    display: flex;
+    gap: 20px;
+}
+
+.mini-mesa-centro {
+    width: 100px;
+    height: 60px;
+    background: #1b5e20;
+    color: white;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: bold;
+    border-radius: 5px;
+    border: 2px solid #2e7d32;
+}
+
+#seleccion-asiento button {
+    padding: 12px 18px;
+    cursor: pointer;
+    background: #fdfdfd;
+    border: 2px solid #4caf50;
+    border-radius: 8px;
+    font-weight: bold;
+    transition: 0.3s;
+}
+
+#seleccion-asiento button:hover {
+    background: #ffd54f;
+    transform: scale(1.05);
+}
+
+#seleccion-asiento button.asiento-ocupado {
+    background-color: #555 !important;
+    color: white !important;
+    border: 2px solid #333 !important;
+    cursor: not-allowed;
+    transform: none; 
+}
+
+#seleccion-asiento button.asiento-activo {
+    background-color: #ffd54f !important; 
+    border: 2px solid #5d4037 !important;
+    transform: scale(1.05);
+}
+
+.seccion-identificacion {
+    margin-top: 30px;
+    text-align: center;
+}
+
+.seccion-identificacion input {
+    padding: 10px;
+    font-size: 16px;
+    border-radius: 5px;
+    border: 1px solid #ccc;
+}
+
+#btn-confirmar-asiento {
+    padding: 15px 30px;
+    background-color: #2e7d32;
+    color: white;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    font-weight: bold;
+    font-size: 18px;
+    transition: 0.3s;
+}
+
+
+/* ==========================================================================
+   3. LA MESA DE JUEGO (EL HEXÁGONO)
+   ========================================================================== */
+
+/* 1. La mesa debe estar preparada pero invisible al inicio */
+#mesa-juego {
+    display: none; /* Se mantiene oculto hasta que el body tenga .juego-activo */
+    margin: 2vh auto;
+    width: 96vw; 
+    height: 92vh; 
+    
+    position: relative;
+    background: radial-gradient(circle, #0a4d1e 0%, #053213 100%);
+    
+    border: 8px solid #3e2723;
+    border-radius: 40px;
+    box-shadow: inset 0 0 80px rgba(0,0,0,0.6);
+    
+    transition: all 0.3s ease;
+    overflow: hidden;
+}
+
+body.juego-activo #mesa-juego {
+    display: flex !important;
+
+    width: 94vw;  
+    height: 88vh; 
+    position: relative;
+    justify-content: center;
+    align-items: center;
+    
+    margin: 2vh auto; 
+    
+    border: 4px solid #3e2723;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.5), inset 0 0 80px rgba(0,0,0,0.6);
+}
+
+/* Estación Central (Donde nace el Tren Mexicano) */
+#tablero-central {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 200px;
+    height: 200px;
+    background: #3e2723;
+    border: 5px solid #ffd700;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 0 30px rgba(0,0,0,0.7);
+    z-index: 10;
+}
+
+
+/* Posicionamiento Hexagonal de los Rivales */
+.mano-rival {
+    /* Mantenemos tus estilos visuales */
+    padding: 10px;
+    background-color: rgba(0,0,0,0.3);
+    border-radius: 12px;
+    min-width: 140px;
+    min-height: 60px;
+    border: 1px solid rgba(255,255,255,0.1);
+
+    /* AJUSTES PARA APILAR NOMBRE Y ASIENTO */
+    display: flex;
+    flex-wrap: wrap;/* Esto pone el nombre arriba y el asiento abajo */
+    gap: 5px;               /* Espacio entre el nombre y el número */
+    justify-content: center;
+    align-items: center;
+    max-width: 250px;
+}
+
+/* EL TRUCO: Creamos el número de asiento automáticamente */
+.mano-rival::after {
+    color: rgba(255, 255, 255, 0.7);
+    font-style: italic;
+    font-size: 0.75rem;
+    color: #ffd700; /* Color miel/dorado para que combine con el resto */
+    font-weight: normal;
+    opacity: 0.8;
+}
+
+/* Asignamos el texto específico a cada ID */
+#pos-1::after { content: "Asiento 1"; }
+#pos-2::after { content: "Asiento 2"; }
+#pos-3::after { content: "Asiento 3"; }
+#pos-4::after { content: "Asiento 4"; }
+#pos-5::after { content: "Asiento 5"; }
+#pos-6::after { content: "Asiento 6"; }
+
+.mano-rival.rival-activo {
+    display: flex !important; /* El JS activa esta clase cuando alguien se sienta */
+}
+
+/* Etiquetas de Nombres */
+/* Estilo para que el nombre no se muerda */
+.nombre-rival-etiqueta, .mi-nombre-etiqueta {
+    background-color: rgba(0, 0, 0, 0.7);
+    padding: 5px 15px;
+    border-radius: 20px;
+    border: 1px solid #ffd700;
+    color: white;
+    font-weight: bold;
+    white-space: nowrap; /* Evita que el nombre se parta en dos líneas */
+    z-index: 50;
+    margin-bottom: 10px;
+}
+
+.mi-nombre-etiqueta {
+    position: relative;
+    top: 0;
+    margin-bottom: 15px;
+    color: #4fc3f7;
+    border-color: #4fc3f7;
+}
+
+/* Tu mano (abajo) */
+#mi-mano {
+    display: flex;
+    flex-direction: row;      /* Las pone una al lado de la otra */
+    flex-wrap: nowrap;        /* Que no se salten de línea */
+    gap: 8px;                 /* Espacio entre cada ficha */
+    justify-content: center;  /* Centradas horizontalmente */
+    align-items: flex-end;    /* Alineadas a la base */
+    padding: 10px;
+    background: rgba(0, 0, 0, 0.2);
+    border-radius: 10px;
+}
+
+
+
+/* ESTACIONES GENÉRICAS DEL HEXÁGONO */
+
+/* Estación Inferior (Tú siempre aquí) */
+#mi-mano-contenedor {
+    position: absolute;
+    bottom: 2%;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 90%;               /* Espacio suficiente para tus 12-15 fichas */
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    z-index: 100;             /* Por encima de todo */
+}
+
+/* Estación Inferior Izquierda */
+#pos-visual-2 {
+    position: absolute;
+    bottom: 20%;
+    left: 5%;
+}
+
+/* Estación Superior Izquierda */
+#pos-visual-3 {
+    position: absolute;
+    top: 20%;
+    left: 5%;
+}
+
+/* Estación Superior (Centro) */
+#pos-visual-4 {
+    position: absolute;
+    top: 2%;
+    left: 50%;
+    transform: translateX(-50%);
+}
+
+/* Estación Superior Derecha */
+#pos-visual-5 {
+    position: absolute;
+    top: 20%;
+    right: 5%;
+}
+
+/* Estación Inferior Derecha */
+#pos-visual-6 {
+    position: absolute;
+    bottom: 20%;
+    right: 5%;
+}
+
+/* ==========================================================================
+   3.5 CONTROLES DE INTERFAZ (BOTONES FLOTANTES)
+   ========================================================================== */
+#btn-iniciar {
+    display: none; 
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    z-index: 1100;
+
+    /* Tamaño responsivo: mínimo 120px, ideal 15% del ancho, máximo 300px */
+    width: clamp(150px, 20vw, 280px); 
+    /* Altura proporcional al ancho para mantener la forma de píldora */
+    padding: clamp(10px, 2vh, 20px) 0;
+    
+    /* Fuente que escala con la pantalla */
+    font-size: clamp(0.9rem, 1.5vw, 1.3rem);
+    
+    background: linear-gradient(135deg, #d32f2f 0%, #b71c1c 100%);
+    color: white;
+    font-weight: bold;
+    text-transform: uppercase;
+    border: 3px solid #ffd700;
+    border-radius: 50px;
+    cursor: pointer;
+    box-shadow: 0 0 20px rgba(0,0,0,0.6);
+    white-space: normal; /* Permite que el texto se ajuste si el botón es muy chico */
+    text-align: center;
+}
+
+#btn-iniciar.visible {
+    display: block !important; /* El JS activa esto cuando hay suficientes jugadores */
+}
+
+#btn-iniciar:hover {
+    /* Mantenemos el -50% -50% para que no pierda su centro y añadimos el scale */
+    transform: translate(-50%, -50%) scale(1.05); 
+    filter: brightness(1.2);
+    box-shadow: 0 12px 25px rgba(0,0,0,0.8);
+    transition: all 0.2s ease-in-out;
+}
+
+#btn-iniciar:active {
+    transform: scale(0.95);
+}
+
+/* =========================================================================
+   4. FICHAS Y ESTILO VISUAL
+========================================================================== */
+.ficha-domino {
+    background-color: #f8f8f8;
+    width: 45px;
+    height: 80px;
+    border-radius: 4px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: space-around;
+    border: 1px solid #222;
+    box-shadow: 2px 4px 6px rgba(0,0,0,0.4);
+    color: #000;
+    font-weight: bold;
+    font-size: 1.3rem;
+    transition: transform 0.2s;
+}
+
+.ficha-domino:hover {
+    transform: translateY(-15px); /* Se levantan un poco al pasar el mouse */
+}
+
+.numero {
+    font-family: 'Arial Black', sans-serif;
+    font-size: 1.4rem; /* Un poco más grandes para que se vean bien */
+    line-height: 1;
+    text-align: center;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 40%; /* Divide la ficha en dos partes iguales */
+}
+
+.divisor { width: 80%; height: 2px; background-color: #444; }
+
+.ficha-rival {
+    width: 20px;
+    height: 35px;
+    background: linear-gradient(135deg, #1a237e 0%, #0d47a1 100%);
+    border: 1px solid rgba(255,255,255,0.3);
+    border-radius: 3px;
+    box-shadow: 2px 2px 5px rgba(0,0,0,0.5);
+}
+
+/* Sincronización con el JS */
+.numero-0 { color: #888; }
+.numero-1 { color: #000; }
+.numero-2 { color: #d32f2f; }
+.numero-3 { color: #1976d2; }
+.numero-4 { color: #388e3c; }
+.numero-5 { color: #f57c00; }
+.numero-6 { color: #fbc02d; }
+.numero-7 { color: #7b1fa2; }
+.numero-8 { color: #0097a7; }
+.numero-9 { color: #4e342e; }
+.numero-10 { color: #616161; }
+.numero-11 { color: #c2185b; }
+.numero-12 { color: #0d47a1; font-weight: bold; }
+
+.ficha-seleccionada {
+    border: 3px solid #ffd700 !important; /* Brillo dorado */
+    transform: translateY(-25px) scale(1.1); /* Sube y se hace un poco más grande */
+    box-shadow: 0 10px 20px rgba(255, 215, 0, 0.4);
+    z-index: 1000;
+}
+
+/* ====================================================
+/* Media Queries */
+/* ================================================== */
+
+@media (max-width: 800px) {
+    .mano-rival {
+        transform: scale(0.8); /* Encogemos un poco los asientos si la pantalla es chica */
+    }
+    #tablero-central {
+        width: 150px;
+        height: 150px;
+    }
+}
+

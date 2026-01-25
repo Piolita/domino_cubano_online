@@ -1,166 +1,100 @@
-# app.py
+# app.py 
+# Director de orquesta
 
-import random
-import flask
-from flask import Flask, render_template
+
+# --- I M P O R T A C I O N E S
+from flask import Flask, render_template, request
 from flask_socketio import SocketIO, emit
+from logic_domino import JuegoDominio
+from scoring import calcular_puntos_mano
+
+
+#  --- C O N F I G U R A C I O N  I N I C I A L
 
 app = Flask(__name__)
-app.config['SECRET_KEY'] = 'domino_secreto_veracruz'
+app.config['SECRET_KEY'] = 'dominov_2026_veracruz'
+socketio = SocketIO(app)
 
-# Configuración estable de SocketIO
-socketio = SocketIO(app, cors_allowed_origins="*", async_mode='threading')
-
-# --- DEFINICIÓN DE FUNCIONES 
-
-def crear_mazo_cubano():
-    mazo = []
-    # Dominó de 55 fichas (del 0 al 9)
-    for i in range(10):
-        for j in range(i, 10):
-            mazo.append([i, j])
-    random.shuffle(mazo)
-    return mazo
-
-# --- ESTADO GLOBAL DEL JUEGO 
-
-mazo_maestro = crear_mazo_cubano() 
-jugadores = []
-fichas_en_mesa = []
-extremos = []
-turno_actual = 0
-
-# --- RUTAS DE NAVEGACIÓN 
+# Creamos una instancia única del juego
+juego = JuegoDominio()
+jugadores_en_mesa = {}
 
 @app.route('/')
 def index():
+    # Esta ruta servirá para que tus primos entren a la mesa
     return render_template('index.html')
 
 
-# --- C O N E X I O N
+# --- E V E N T O S    D E L  S E R V I D O R
 @socketio.on('connect')
 def handle_connect():
-    global mazo_maestro, jugadores, turno_actual
-    sid = flask.request.sid
-    
-    if sid not in jugadores:
-        if len(jugadores) < 4:
-            jugadores.append(sid)
-            num_jugador = jugadores.index(sid)
-            
-            # Repartimos 10 fichas del mazo único
-            mis_fichas = []
-            for _ in range(10):
-                if mazo_maestro:
-                    mis_fichas.append(mazo_maestro.pop(0))
-            
-            print(f"--- JUGADOR {num_jugador} CONECTADO ---")
-            print(f"Fichas entregadas: {mis_fichas}")
-            print(f"Quedan {len(mazo_maestro)} fichas en el mazo total.")
-            
-            emit('bienvenida', {'num_jugador': num_jugador})
-            emit('recibir_fichas', {'fichas': mis_fichas})
-        else:
-            # Si ya hay 4, entra como espectador
-            emit('bienvenida', {'num_jugador': 'espectador'})
-    
-    # Informamos a todos quién tiene el turno actual
-    emit('cambio_turno', {'turno': turno_actual}, broadcast=True)
-
-
-# ----- J U G A R   F I C H A
-@socketio.on('jugar_ficha')
-def ficha_jugada(data):
-    global extremos, fichas_en_mesa, turno_actual, jugadores
-    
-    sid_que_cliqueo = flask.request.sid
-    
-    # --- BLOQUE 1: IDENTIFICACIÓN ---
-    try:
-        indice_jugador = jugadores.index(sid_que_cliqueo)
-    except ValueError:
-        return 
-
-    # --- BLOQUE 2: SEGURIDAD (TURNO) ---
-    if indice_jugador != turno_actual:
-        emit('error_jugada', {
-            'mensaje': f'¡No es tu turno! Le toca al Jugador {turno_actual}', 
-            'ficha': data['ficha']
+    # Enviamos a quien se acaba de conectar la lista de quién ya está sentado
+    for asiento, info in jugadores_en_mesa.items():
+        emit('jugador_sentado', {
+            'nombre': info['nombre'], 
+            'asiento': asiento
         })
-        return
 
-    # --- BLOQUE 3: LÓGICA DE CONEXIÓN Y ORIENTACIÓN ---
-    ficha = data['ficha']      
-    jugada_valida = False
-    invertir = False          
-    indice_punta = -1
+@socketio.on('unirse_juego')
+def handle_unirse(data):
+    nombre = data.get('nombre')
+    asiento = data.get('asiento')
 
-    # 1. SI LA MESA ESTÁ VACÍA
-    if not fichas_en_mesa:
-        fichas_en_mesa.append(ficha)
-        if ficha[0] == ficha[1]:
-            # Es mula: abre 4 caminos (arriba, abajo, izq, der)
-            extremos = [ficha[0], ficha[0], ficha[0], ficha[0]]
-        else:
-            # Normal: solo 2 caminos
-            extremos = [ficha[0], ficha[1]]
-        jugada_valida = True
-        indice_punta = 0
+    jugadores_en_mesa[asiento] = {'nombre': nombre, 'sid': request.sid}
+   
+    print(f"DEBUG: Jugadores actuales: {len(jugadores_en_mesa)}")
+
+    # Avisamos a todos los demás quién se sentó
+    emit('jugador_sentado', {'nombre': nombre, 'asiento': asiento}, broadcast=True)
+
+    # Si hay al menos 2 personas, mostramos el botón de iniciar a todos
+    if len(jugadores_en_mesa) >= 2:
+        print("DEBUG: ¡Mesa lista! Enviando botón de inicio.")
+        emit('mostrar_boton_inicio', broadcast=True)
+
+
+@socketio.on('solicitar_lista_jugadores')
+def handle_lista():
+    # Enviamos solo a quien lo pidió (request.sid) la lista de todos
+    for asiento, info in jugadores_en_mesa.items():
+        emit('jugador_sentado', {
+            'nombre': info['nombre'], 
+            'asiento': asiento
+        })
+
+
+@socketio.on('iniciar_partida')
+def handle_iniciar():
+    juego.barajar()
     
-    # 2. SI YA HAY FICHAS: BUSCAMOS EN TODAS LAS PUNTAS DISPONIBLES
-    else:
-        for i, valor_punta in enumerate(extremos):
-            if ficha[0] == valor_punta:
-                extremos[i] = ficha[1] # La punta se actualiza con el otro extremo de la ficha
-                invertir = True if i == 0 else False
-                indice_punta = i
-                jugada_valida = True
-                break
-            elif ficha[1] == valor_punta:
-                extremos[i] = ficha[0] # Se invierte y la punta se actualiza con el primer valor
-                invertir = False if i == 0 else True
-                indice_punta = i
-                jugada_valida = True
-                break
+    # 1. Obtenemos la lista de asientos ocupados actualmente
+    asientos_reales = list(jugadores_en_mesa.keys())
+    
+    # 2. Usamos la nueva lógica de repartir que acepta la lista de asientos
 
-        # REGLA ESPECIAL: Si la ficha jugada es una MULA, añade 2 brazos nuevos
-        if jugada_valida and ficha[0] == ficha[1]:
-            extremos.append(ficha[0])
-            extremos.append(ficha[0])
+    manos = juego.repartir(asientos_reales) 
+    
+    # 3. Reparto de fichas individual (Susurro)
+    for asiento in asientos_reales:
+        info = jugadores_en_mesa[asiento]
+        mano_jugador = manos[asiento]
+        info['mano'] = mano_jugador 
+        
+        # Enviamos las fichas directo a la habitación del jugador (sid)
+        emit('recibir_fichas', {'mano': mano_jugador}, room=info['sid'])
+    
+    # 4. Anuncio General: ¡Esto mata el botón rojo!
+    emit('partida_iniciada', broadcast=True)
 
-    # 3. RESPUESTA AL CLIENTE (CORREGIDA)
-    if jugada_valida:
-        p_indice = indice_punta if 'indice_punta' in locals() else 0
-        
-        # Usamos la variable lado_visual que SÍ calculamos
-        lado_visual = 'izq' if p_indice == 0 else 'der'
-        
-        emit('actualizar_tablero', {
-            'ficha': ficha, 
-            'invertir': invertir,
-            'puntas_activas': extremos,
-            'indice_punta': p_indice,
-            'lado': lado_visual  # <-- CAMBIO AQUÍ: antes decía 'der'
+    # 5. Actualizar visual de fichas ocultas para los rivales
+    for asiento in asientos_reales:
+        emit('actualizar_manos_rivales', {
+            'asiento': asiento,
+            'cantidad': len(jugadores_en_mesa[asiento]['mano'])
         }, broadcast=True)
-        
-        fichas_en_mesa.append(ficha) # Importante: mover esto aquí para no duplicar
-        turno_actual = (turno_actual + 1) % len(jugadores)
-        emit('cambio_turno', {'turno': turno_actual}, broadcast=True)
 
-
-        
-# ------ P A S A R   T U R N O
-@socketio.on('pasar_turno')
-def pasar_turno():
-    global turno_actual, jugadores
-    sid_que_cliqueo = flask.request.sid
-    
-    if jugadores[turno_actual] == sid_que_cliqueo:
-        turno_actual = (turno_actual + 1) % len(jugadores)
-        print(f"El jugador {jugadores.index(sid_que_cliqueo)} pasó.")
-        emit('cambio_turno', {'turno': turno_actual}, broadcast=True)
 
 if __name__ == '__main__':
-    socketio.run(app, debug=True, port=5005)
+    socketio.run(app, debug=True, port=5000)
 
 

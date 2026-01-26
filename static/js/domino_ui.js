@@ -168,26 +168,26 @@ socket.on('recibir_fichas', (data) => {
         `;
 
         // 3. LA LLAVE DEL ÉXITO: Le decimos qué hacer cuando le des clic
-        div.onclick = () => seleccionarFicha(div);
+        div.onclick = () => establecerFichaSeleccionada(ficha.lado1, ficha.lado2, div);
 
         contenedor.appendChild(div);
     });
 });
 
 /* ==========================================================================
-   6. FUNCIÓN PARA RESALTAR LA FICHA ELEGIDA
+   6. RESALTAR FICHA
    ========================================================================== */
-function seleccionarFicha(elementoFicha) {
-    // Primero quitamos el brillo de cualquier otra ficha que hayamos tocado antes
+   
+function resaltarFichaEnInterfaz(elemento) {
+    // 1. Quitamos el brillo a todas las fichas de mi mano
     document.querySelectorAll('.ficha-domino').forEach(f => {
         f.classList.remove('ficha-seleccionada');
     });
 
-    // Luego le ponemos el brillo dorado a la ficha que acabamos de tocar
-    elementoFicha.classList.add('ficha-seleccionada');
-    
-    // Esto es para que tú veas en la consola que el programa sí sabe qué ficha tocaste
-    console.log("Has elegido la ficha: " + elementoFicha.dataset.lado1 + " - " + elementoFicha.dataset.lado2);
+    // 2. Se lo ponemos solo a la que tocamos
+    if (elemento) {
+        elemento.classList.add('ficha-seleccionada');
+    }
 }
 
 /* ==========================================================================

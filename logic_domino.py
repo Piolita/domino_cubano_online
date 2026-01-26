@@ -1,6 +1,16 @@
 # El Árbitro y el Matemático
 # logic_domino.py
 
+# Generación del Set: Crear las 91 fichas del 0 al 12.
+
+# La Sopa (Barajeo): Revolver las fichas de forma aleatoria.
+
+# Reparto Legal: Entregar la cantidad correcta de fichas según el número de personas sentadas.
+
+# Validación de Jugadas (Próximamente): Decir "Sí" o "No" cuando alguien intente poner una ficha. Por ejemplo, si hay un 5 en la mesa, solo permite un 5.
+
+# Estado de la Mesa: Saber qué números están en los extremos (punta izquierda y punta derecha).
+
 
 
 import random
@@ -38,12 +48,17 @@ class JuegoDominio:
 
     # Reparto Legal
     def repartir(self, lista_asientos):
-        """
-        Ahora recibe la lista de asientos reales (ej: [1, 2, 5])
-        para entregar las fichas a los IDs correctos.
-        """
         num_jugadores = len(lista_asientos)
-        fichas_por_persona = 12 if num_jugadores >= 5 else 15
+
+        # Regla de reparto para Doble 12 (91 fichas totales)
+        if num_jugadores <= 4:
+            fichas_por_persona = 15
+        elif num_jugadores == 5:
+            fichas_por_persona = 12
+        elif num_jugadores == 6:
+            fichas_por_persona = 11
+        else:
+            fichas_por_persona = 10
         
         manos = {}
         for asiento in lista_asientos:

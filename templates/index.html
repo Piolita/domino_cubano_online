@@ -1,70 +1,56 @@
-<!DOCTYPE html>
-<html lang="es">
-    <head>
-        <meta charset="UTF-8">
-        <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <title>Dominó Cubano - Edición Veracruz</title>   
-        <link rel="stylesheet" href="{{ url_for('static', filename='css/tablero_pro.css') }}">
-    </head>
-    <body>
-        <div id="pantalla-inicio">
-            <h1>Dominó Cubano Online</h1>
-            
-            <div id="seleccion-asiento">
-                <h3>1. Escoge tu lugar en la mesa</h3>
-                <div class="mini-mesa-contenedor">
-                    <div class="fila-asientos">
-                        <button onclick="seleccionarAsiento(3)">Asiento 3</button>
-                        <button onclick="seleccionarAsiento(4)">Asiento 4</button>
-                    </div>
-                    
-                    <div class="fila-asientos cabeceras">
-                        <button onclick="seleccionarAsiento(2)">Asiento 2 (Cabecera)</button>
-                        <div class="mini-mesa-centro">MESA</div>
-                        <button onclick="seleccionarAsiento(5)">Asiento 5 (Cabecera)</button>
-                    </div>
+{% extends "layout.html" %}
 
-                    <div class="fila-asientos">
-                        <button onclick="seleccionarAsiento(1)">Asiento 1 (Tú)</button>
-                        <button onclick="seleccionarAsiento(6)">Asiento 6</button>
-                    </div>
+{% block content %}
+    <div id="pantalla-inicio">
+        <h1>Dominó - Tren Mexicano</h1>
+        
+        <div id="seleccion-asiento">
+            <h3>1. Escoge tu lugar en la mesa</h3>
+            <div class="mini-mesa-contenedor">
+                <div class="fila-asientos">
+                    <button onclick="seleccionarAsiento(3)">Asiento 3</button>
+                    <button onclick="seleccionarAsiento(4)">Asiento 4</button>
+                </div>
+                
+                <div class="fila-asientos cabeceras">
+                    <button onclick="seleccionarAsiento(2)">Asiento 2 (Cabecera)</button>
+                    <div class="mini-mesa-centro">MESA</div>
+                    <button onclick="seleccionarAsiento(5)">Asiento 5 (Cabecera)</button>
+                </div>
+
+                <div class="fila-asientos">
+                    <button onclick="seleccionarAsiento(1)">Asiento 1 (Tú)</button>
+                    <button onclick="seleccionarAsiento(6)">Asiento 6</button>
                 </div>
             </div>
-
-            <div class="seccion-identificacion">
-                <h3>2. Identifícate</h3>
-                <input type="text" id="nombre-jugador" placeholder="Tu nombre, primo...">
-                <br><br>
-                <button id="btn-confirmar-asiento" onclick="confirmarAsiento()">
-                    ¡LISTO, A JUGAR!
-                </button>
-            </div>
         </div>
 
-        <div id="mesa-juego">
-            <div id="pos-visual-1" class="mano-rival"></div> 
-            <div id="pos-visual-2" class="mano-rival"></div>
-            <div id="pos-visual-3" class="mano-rival"></div>
-            <div id="pos-visual-4" class="mano-rival"></div>
-            <div id="pos-visual-5" class="mano-rival"></div>
-            <div id="pos-visual-6" class="mano-rival"></div>
-
-            <div id="tablero-central"></div>
-
-            <div id="mi-mano-contenedor">
-                <div id="mi-mano"></div>
-            </div>
-
-            <button id="btn-iniciar">
-                ¡COMENZAR PARTIDA!
+        <div class="seccion-identificacion">
+            <h3>2. Identifícate</h3>
+            <input type="text" id="nombre-jugador" placeholder="Tu nombre, primo...">
+            <br><br>
+            <button id="btn-confirmar-asiento" onclick="confirmarAsiento()">
+                ¡LISTO, A JUGAR!
             </button>
         </div>
+    </div>
 
-        <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.0.1/socket.io.js"></script>
-        <script src="{{ url_for('static', filename='js/domino_ui.js') }}"></script>
-        <script src="{{ url_for('static', filename='js/domino_logic.js') }}"></script>
-        <script src="{{ url_for('static', filename='js/domino_ui.js') }}"></script>
-    </body>
-</html>
+    <div id="mesa-juego">
+        <div id="pos-visual-1" class="mano-rival"></div> 
+        <div id="pos-visual-2" class="mano-rival"></div>
+        <div id="pos-visual-3" class="mano-rival"></div>
+        <div id="pos-visual-4" class="mano-rival"></div>
+        <div id="pos-visual-5" class="mano-rival"></div>
+        <div id="pos-visual-6" class="mano-rival"></div>
 
+        <div id="tablero-central"></div>
 
+        <div id="mi-mano-contenedor">
+            <div id="mi-mano"></div>
+        </div>
+
+        <button id="btn-iniciar">
+            ¡COMENZAR PARTIDA!
+        </button>
+    </div>
+{% endblock %}

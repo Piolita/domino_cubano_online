@@ -216,3 +216,33 @@ socket.on('actualizar_manos_rivales', (data) => {
         }
     }
 });
+
+/* ==========================================================================
+   8. CONTROL DE TURNOS Y MENSAJES
+   ========================================================================== */
+
+socket.on('turno_actual', (data) => {
+    // 1. Ponemos el anuncio en la consola para saber que llegó
+    console.log("Anuncio de turno:", data.mensaje);
+
+    // 2. Buscamos o creamos un letrero en la pantalla para avisar a todos
+    let letreroTurno = document.getElementById('anuncio-turno');
+    
+    if (!letreroTurno) {
+        letreroTurno = document.createElement('div');
+        letreroTurno.id = 'anuncio-turno';
+        letreroTurno.className = 'alerta-turno'; // Luego le damos estilo en CSS
+        document.body.appendChild(letreroTurno);
+    }
+
+    letreroTurno.innerText = data.mensaje;
+
+    // 3. Si el turno es MÍO, resaltamos mi zona de fichas
+    if (String(data.asiento) === String(asientoSeleccionado)) {
+        document.getElementById('mi-mano').classList.add('mi-turno-activo');
+        alert("¡Es tu turno! Tienes la mula de " + data.valor_mula + " para abrir la estación.");
+    } else {
+        document.getElementById('mi-mano').classList.remove('mi-turno-activo');
+    }
+});
+

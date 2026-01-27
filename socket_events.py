@@ -21,7 +21,7 @@ juego = JuegoDominio()
 jugadores_en_mesa = {}
 
 
-# --- E V E N T O S    D E L  S E R V I D O R
+# --- E V E N T O S    D E L   S E R V I D O R
 
 def register_handlers(socketio):
 
@@ -82,16 +82,38 @@ def register_handlers(socketio):
         # 4. Anuncio General: ¡Esto mata el botón rojo!
         emit('partida_iniciada', broadcast=True)
 
-        # 5. Actualizar visual de fichas ocultas para los rivales
+        # 5. Actualizar fichas ocultas para los rivales
         for asiento in asientos_reales:
             emit('actualizar_manos_rivales', {
                 'asiento': asiento,
                 'cantidad': len(jugadores_en_mesa[asiento]['mano'])
             }, broadcast=True)
 
+        # 6. IDENTIFICAR EL TURNO INICIAL 
+        asiento_inicial, valor_mula = juego.encontrar_mula_inicio(manos)
 
+        if asiento_inicial:
+            nombre_valiente = jugadores_en_mesa[asiento_inicial]['nombre']
+            mensaje_inicio = f"¡Empieza {nombre_valiente} con la mula de {valor_mula}!"
+            
+            print(f"DEBUG: {mensaje_inicio}") # Para que tú lo veas en la consola negra
+            
+            # Avisamos a todos los primos quién abre la estación
+            emit('turno_actual', {
+                'asiento': asiento_inicial,
+                'nombre': nombre_valiente,
+                'valor_mula': valor_mula,
+                'mensaje': mensaje_inicio
+            }, broadcast=True)
+        else:
+            # Caso extremo: Nadie tiene mulas (el folleto dice re-barajar, 
+            # pero por ahora mandemos un aviso)
+            emit('error_juego', {'mensaje': "Nadie tiene mulas para empezar. ¡Barajen de nuevo!"}, broadcast=True)
+            
+            
     @socketio.on('jugar_ficha')
     def handle_jugar(data):
         # Aquí la Telefonista le preguntará al Árbitro en el futuro
         print(f"Ficha recibida en servidor: {data['lado1']}-{data['lado2']}")
         emit('ficha_colocada_en_mesa', data, broadcast=True)
+

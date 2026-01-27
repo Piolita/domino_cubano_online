@@ -1,0 +1,22 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dominó Doble 12 - Veracruz</title>
+    
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/base.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/lobby.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/juego.css') }}">
+    
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.0.1/socket.io.js"></script>
+</head>
+<body>
+
+    {% block content %}{% endblock %}
+
+    <script src="{{ url_for('static', filename='js/domino_logic.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/domino_ui.js') }}"></script>
+</body>
+</html>

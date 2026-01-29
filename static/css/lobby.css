@@ -104,3 +104,11 @@ body.juego-activo #pantalla-inicio {
     transition: 0.3s;
 }
 
+#btn-iniciar {
+    display: none; /* Por defecto, nadie lo ve */
+}
+
+#btn-iniciar.visible {
+    display: block; /* Solo se ve cuando el JS le pone la clase */
+    /* Aquí puedes poner tus colores, bordes, etc. */
+}

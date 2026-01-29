@@ -1,14 +1,14 @@
-# El Árbitro y el Matemático
+# El Árbitro y el Matemático, Libro de recetas reglas.
 # logic_domino.py
 
-# Generación del Set: Crear las 91 fichas del 0 al 12.
-
-# La Sopa (Barajeo): Revolver las fichas de forma aleatoria.
-
+# Generación del Set: Crear las 91 fichas del 0 al 12
+# No sabe de internet, botones, ni quien esta sentado, solo el manual,  
+# Sabe cuántas fichas tiene un dominó cubano ($55$ fichas).
+# Sabe cómo barajar para que sea justo.Sabe quién tiene la mula más alta para empezar.
+# La Sopa (Barajeo): Revuelve las fichas de forma aleatoria.
 # Reparto Legal: Entregar la cantidad correcta de fichas según el número de personas sentadas.
-
-# Validación de Jugadas (Próximamente): Decir "Sí" o "No" cuando alguien intente poner una ficha. Por ejemplo, si hay un 5 en la mesa, solo permite un 5.
-
+# Validación de Jugadas (Próximamente): Decir "Sí" o "No" cuando alguien intente poner una ficha. 
+# Por ejemplo, si hay un 5 en la mesa, solo permite un 5.
 # Estado de la Mesa: Saber qué números están en los extremos (punta izquierda y punta derecha).
 
 
@@ -22,8 +22,7 @@ class JuegoDominio:
         self.fichas = self._crear_set_doble_12()
         self.pozo = []
         self.tablero = []  # Para guardar las fichas jugadas en orden
-        self.extremo_izquierdo = None
-        self.extremo_derecho = None
+        self.puntas = [None, None]
 
     def _crear_set_doble_12(self):
         set_fichas = []
@@ -71,15 +70,31 @@ class JuegoDominio:
     
 
     def encontrar_mula_inicio(self, manos):
-        """
-        Busca la mula más alta disponible en las manos repartidas,
-        empezando desde el 12-12 hacia abajo.
-        """
-        for valor_mula in range(12, -1, -1): # Del 12 al 0
+        for valor_mula in range(12, -1, -1):
             for asiento, fichas in manos.items():
-                for ficha in fichas:
+                for i, ficha in enumerate(fichas):
                     if ficha['lado1'] == valor_mula and ficha['lado2'] == valor_mula:
+                        # 1. Quitamos la ficha de la mano del jugador
+                        fichas.pop(i) 
+                        
+                        # 2. Guardamos en la memoria qué mula inició
+                        self.mula_inicial = valor_mula
+                        
+                        # 3. ¡IMPORTANTE! Establecemos las primeras puntas
+                        # Como es la primera ficha, ambos lados son iguales
+                        self.puntas = [valor_mula, valor_mula]
+                        
+                        # 4. Metemos la mula al registro del tablero
+                        self.tablero = [(valor_mula, valor_mula)]
+                        
                         return asiento, valor_mula
         return None, None
     
-    
+
+    def es_jugada_valida(self, ficha, lado):
+        # ficha es una tupla (6, 4)
+        # lado es 'izq' o 'der' (0 o 1)
+        punta_a_conectar = self.puntas[lado]
+        
+        # Si la ficha tiene el número de la punta, es válida
+        return ficha[0] == punta_a_conectar or ficha[1] == punta_a_conectar

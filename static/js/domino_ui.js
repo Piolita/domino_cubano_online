@@ -1,5 +1,5 @@
 /* ==========================================================================
-   1. CONFIGURACIÓN INICIAL Y VARIABLES GLOBALES
+    CONFIGURACIÓN INICIAL Y VARIABLES GLOBALES Navegador
    ========================================================================== */
 const socket = io();
 const pantallaInicio = document.getElementById('pantalla-inicio');
@@ -14,8 +14,7 @@ function obtenerPosicionVisual(asientoRival) {
     const s = parseInt(asientoSeleccionado);
     const r = parseInt(asientoRival);
 
-    // Esta fórmula garantiza que tú siempre seas el centro (Posición 1)
-    // y los demás giren a tu alrededor correctamente.
+    // tú siempre seas el centro (Posición 1)
     let posRelativa = (r - s + total) % total;
     
     // Retornamos del 1 al 6 para coincidir con los nuevos IDs del CSS
@@ -23,7 +22,7 @@ function obtenerPosicionVisual(asientoRival) {
 }
 
 /* ==========================================================================
-   2. FUNCIONES DEL LOBBY (ANTES DE ENTRAR A LA MESA)
+    FUNCIONES DEL LOBBY (ANTES DE ENTRAR A LA MESA)
    ========================================================================== */
 
 // --- A. Seleccionar el asiento visualmente ---
@@ -52,7 +51,7 @@ function confirmarAsiento() {
         return;
     }
 
-    // ESTA ES LA LLAVE QUE ABRE LA MESA:
+    //  ABRE LA MESA
     document.body.classList.add('juego-activo');
 
     socket.emit('unirse_juego', {
@@ -64,22 +63,30 @@ function confirmarAsiento() {
 }
 
 /* ==========================================================================
-   3. EVENTOS DE JUGADORES (QUIÉN ENTRA Y SE SIENTA)
+    EVENTOS DE JUGADORES (QUIÉN ENTRA Y SE SIENTA)
    ========================================================================== */
 
 socket.on('jugador_sentado', (data) => { 
-   
+    // --- 1. LÓGICA DE BOTONES EN EL LOBBY ---
     const botones = document.querySelectorAll('#seleccion-asiento button');
     botones.forEach(btn => {
         if (btn.getAttribute('onclick') && btn.getAttribute('onclick').includes(data.asiento)) {
-            btn.disabled = true;
             
-            btn.classList.add('asiento-ocupado');
-            btn.innerText = `Ocupado por ${data.nombre}`;
+            // Si el nombre es "DISPONIBLE", dejamos el botón libre
+            if (data.nombre === "DISPONIBLE") {
+                btn.disabled = false; // ¡PUEDES HACER CLIC!
+                btn.classList.remove('asiento-ocupado');
+                btn.innerText = `Asiento ${data.asiento} (Libre)`;
+            } else {
+                // Si es un nombre real, lo bloqueamos como siempre
+                btn.disabled = true;
+                btn.classList.add('asiento-ocupado');
+                btn.innerText = `Ocupado por ${data.nombre}`;
+            }
         }
     });
 
-    // B. LÓGICA DE DIBUJO EN MESA
+    // LÓGICA DE DIBUJO EN MESA
     const esMiPropioAsiento = String(data.asiento) === String(asientoSeleccionado);
     
     if (esMiPropioAsiento) {
@@ -112,6 +119,41 @@ socket.on('jugador_sentado', (data) => {
     }
 });
 
+
+// --- LIBERAR ASIENTO CUANDO ALGUIEN SE VA ---
+socket.on('asiento_liberado', (data) => {
+    console.log(`Lobby: Liberando el asiento ${data.asiento}`);
+    
+    const botones = document.querySelectorAll('#seleccion-asiento button');
+    botones.forEach(btn => {
+        // Buscamos el botón que tiene el número de asiento que se liberó
+        if (btn.getAttribute('onclick') && btn.getAttribute('onclick').includes(data.asiento)) {
+            btn.disabled = false;
+            btn.classList.remove('asiento-ocupado');
+            btn.innerText = `Asiento ${data.asiento}`;
+        }
+    });
+
+    // También limpiamos visualmente el lugar del rival en la mesa
+    const numeroPos = obtenerPosicionVisual(data.asiento);
+    const contenedorEnMesa = document.getElementById(`pos-visual-${numeroPos}`);
+    
+    if (contenedorEnMesa) {
+        contenedorEnMesa.classList.remove('rival-activo');
+
+        // En lugar de innerHTML = '', solo borramos las etiquetas de nombre y fichas del rival
+        const nombreEtiqueta = contenedorEnMesa.querySelector('.nombre-rival-etiqueta');
+        if (nombreEtiqueta) nombreEtiqueta.remove();
+        
+        const fichasRivales = contenedorEnMesa.querySelectorAll('.ficha-rival');
+        fichasRivales.forEach(f => f.remove());
+        
+        console.log(`Visual: Se limpió la identidad del asiento ${data.asiento}, pero el tablero permanece.`);
+        
+    }
+});
+
+
 // --- C. SOLICITAR ACTUALIZACIÓN AL ENTRAR ---
 socket.on('connect', () => {
     if (asientoSeleccionado) {
@@ -120,31 +162,44 @@ socket.on('connect', () => {
 });
 
 
+
 /* ==========================================================================
-   4. CONTROL DE LA PARTIDA, FICHAS Y TABLERO
+    CONTROL DE LA PARTIDA 
    ========================================================================== */
 
 socket.on('mostrar_boton_inicio', () => {
-    if (btnIniciar) {
-        btnIniciar.classList.add('visible');
+    const btn = document.getElementById('btn-iniciar');
+    const centro = document.getElementById('tablero-central');
+    
+    // REGLA DE ORO: Solo mostramos el botón si el centro está VACÍO
+    // Si ya hay una mula ahí (tiene hijos/children), el botón se queda escondido.
+    if (btn && centro && centro.children.length === 0) {
+        btn.classList.add('visible');
+        btn.style.display = 'block'; 
+        console.log("Visual: Eres anfitrión y la mesa está limpia. Botón mostrado.");
+    } else {
+        console.log("Visual: Partida en curso detectada. El botón de inicio se mantiene oculto.");
     }
 });
 
-btnIniciar.onclick = () => { 
+
+// Usamos una función para el clic
+document.getElementById('btn-iniciar').onclick = () => { 
     socket.emit('iniciar_partida'); 
 };
 
 socket.on('partida_iniciada', () => { 
-    console.log("¡Llegó la orden del servidor! Escondiendo botón...");
-    if (btnIniciar) {
-        btnIniciar.classList.remove('visible');
+    const btn = document.getElementById('btn-iniciar');
+    if (btn) {
+        btn.classList.remove('visible');
+        console.log("Partida en marcha. Botón retirado.");
     }
 });
 
 
 
 /* ==========================================================================
-   5. RECEPCIÓN DE FICHAS (TUS FICHAS CON CLIC)
+    RECEPCIÓN DE FICHAS 
    ========================================================================== */
 socket.on('recibir_fichas', (data) => {
     const contenedor = document.getElementById('mi-mano');
@@ -175,7 +230,7 @@ socket.on('recibir_fichas', (data) => {
 });
 
 /* ==========================================================================
-   6. RESALTAR FICHA
+    RESALTAR FICHA
    ========================================================================== */
    
 function resaltarFichaEnInterfaz(elemento) {
@@ -191,7 +246,7 @@ function resaltarFichaEnInterfaz(elemento) {
 }
 
 /* ==========================================================================
-   7. ACTUALIZAR MANO RIVALES
+    ACTUALIZAR MANO RIVALES
    ========================================================================== */
 
 
@@ -218,12 +273,16 @@ socket.on('actualizar_manos_rivales', (data) => {
 });
 
 /* ==========================================================================
-   8. CONTROL DE TURNOS Y MENSAJES
+    CONTROL DE TURNOS Y MENSAJES
    ========================================================================== */
 
 socket.on('turno_actual', (data) => {
     // 1. Ponemos el anuncio en la consola para saber que llegó
     console.log("Anuncio de turno:", data.mensaje);
+
+    if (data.valor_mula !== null) {
+        renderizarMulaInicial(data.valor_mula);
+    }
 
     // 2. Buscamos o creamos un letrero en la pantalla para avisar a todos
     let letreroTurno = document.getElementById('anuncio-turno');
@@ -246,3 +305,102 @@ socket.on('turno_actual', (data) => {
     }
 });
 
+// MULA MAYOR INICIA PARTIDA
+
+
+function renderizarMulaInicial(valor) {
+    // 1. Antes que nada, si existe el botón de inicio, lo borramos físicamente
+    const btn = document.getElementById('btn-iniciar');
+    if (btn) {
+        btn.remove(); // Lo eliminamos por completo del documento
+    }
+    const centro = document.getElementById('tablero-central');
+    
+    // Solo ponemos la mula si el centro está vacío
+    if (centro.children.length > 0) {
+        console.log("Visual: La estación ya tiene su mula, no hace falta limpiar.");
+        return; 
+    }
+
+    // Creamos el elemento de la ficha
+    const fichaDiv = document.createElement('div');
+    fichaDiv.className = 'ficha-domino mula-central'; 
+    
+    // Le ponemos los números (como es mula, ambos lados son iguales)
+    fichaDiv.innerHTML = `
+        <div class="numero numero-${valor}">${valor}</div>
+        <div class="divisor"></div>
+        <div class="numero numero-${valor}">${valor}</div>
+    `;
+
+    // La metemos al centro de la estación
+    centro.appendChild(fichaDiv);
+    console.log("Visual: Mula de " + valor + " colocada en la estación.");
+}
+
+
+socket.on('anuncio_global', (data) => {
+    const btn = document.getElementById('btn-iniciar');
+    if (btn) btn.style.display = 'none';
+
+    // 1. Colocamos la mula físicamente en la mesa
+    renderizarMulaInicial(data.valor_mula);
+
+    // 2. Creamos el elemento del letrero
+    const banner = document.createElement('div');
+    banner.className = 'banner-inicio-partida'; // La "clase" es la que manda
+    banner.innerHTML = `<h3>🌟 ${data.mensaje} 🌟</h3>`;
+    
+    // Lo pegamos al body para que no empuje la mesa
+    document.body.appendChild(banner);
+
+    // 3. Animación de salida y limpieza
+    setTimeout(() => { 
+        banner.classList.add('desvanecer'); // Solo añadimos una clase de CSS
+        setTimeout(() => banner.remove(), 1000); 
+    }, 7000); 
+});
+
+
+// Entrada y salida de jugadores 
+// Cambio del anfitrion ausente
+
+socket.on('jugador_ausente', (data) => {
+    const numeroPos = obtenerPosicionVisual(data.asiento);
+    const contenedor = document.getElementById(`pos-visual-${numeroPos}`);
+    
+    if (contenedor) {
+        // En lugar de borrar, le ponemos una apariencia de "fantasma"
+        contenedor.style.opacity = "0.5"; 
+        const etiqueta = contenedor.querySelector('.nombre-rival-etiqueta');
+        if (etiqueta) {
+            etiqueta.innerText += " (AUSENTE)";
+        }
+        console.log(`Visual: El jugador del asiento ${data.asiento} está ausente, fichas preservadas.`);
+    }
+});
+
+// 1. Para cambiar el nombre en la etiqueta
+socket.on('jugador_salio_y_dejo_fichas', (data) => {
+    const numeroPos = obtenerPosicionVisual(data.asiento);
+    const etiqueta = document.querySelector(`#pos-visual-${numeroPos} .nombre-rival-etiqueta`);
+    if (etiqueta) {
+        etiqueta.innerText = data.nuevo_nombre;
+        etiqueta.style.color = "#ffcc00"; // Un color llamativo para que alguien se anime a entrar
+    }
+});
+
+// 2. Para recibir la "corona" de anfitrión
+socket.on('eres_nuevo_anfitrion', () => {
+    console.log("¡Ahora tú tienes el mando de la mesa!");
+    // Aquí podrías mostrar de nuevo el botón de inicio si la partida no ha empezado
+    const btn = document.getElementById('btn-iniciar');
+    if (btn && document.getElementById('tablero-central').children.length === 0) {
+        btn.style.display = 'block';
+        btn.classList.add('visible');
+    }
+});
+
+socket.on('error_jugada', (data) => {
+    alert(data.mensaje); // O un aviso flotante más elegante como los que ya tenemos
+});

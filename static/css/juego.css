@@ -1,11 +1,11 @@
 
 /* ==========================================================================
-   3. LA MESA DE JUEGO (EL HEXÁGONO)
+    LA MESA DE JUEGO (EL HEXÁGONO)
    ========================================================================== */
 
 /* 1. La mesa debe estar preparada pero invisible al inicio */
 #mesa-juego {
-    display: none; /* Se mantiene oculto hasta que el body tenga .juego-activo */
+    display: none; 
     margin: 2vh auto;
     width: 96vw; 
     height: 92vh; 
@@ -57,7 +57,6 @@ body.juego-activo #mesa-juego {
 
 /* Posicionamiento Hexagonal de los Rivales */
 .mano-rival {
-    /* Mantenemos tus estilos visuales */
     padding: 10px;
     background-color: rgba(0,0,0,0.3);
     border-radius: 12px;
@@ -74,7 +73,7 @@ body.juego-activo #mesa-juego {
     max-width: 250px;
 }
 
-/* EL TRUCO: Creamos el número de asiento automáticamente */
+/*  Creamos el número de asiento automáticamente */
 .mano-rival::after {
     color: rgba(255, 255, 255, 0.7);
     font-style: italic;
@@ -84,7 +83,7 @@ body.juego-activo #mesa-juego {
     opacity: 0.8;
 }
 
-/* Asignamos el texto específico a cada ID */
+/* cada ID */
 #pos-1::after { content: "Asiento 1"; }
 #pos-2::after { content: "Asiento 2"; }
 #pos-3::after { content: "Asiento 3"; }
@@ -97,7 +96,6 @@ body.juego-activo #mesa-juego {
 }
 
 /* Etiquetas de Nombres */
-/* Estilo para que el nombre no se muerda */
 .nombre-rival-etiqueta, .mi-nombre-etiqueta {
     background-color: rgba(0, 0, 0, 0.7);
     padding: 5px 15px;
@@ -141,11 +139,11 @@ body.juego-activo #mesa-juego {
     bottom: 2%;
     left: 50%;
     transform: translateX(-50%);
-    width: 90%;               /* Espacio suficiente para tus 12-15 fichas */
+    width: 90%;              
     display: flex;
     flex-direction: column;
     align-items: center;
-    z-index: 100;             /* Por encima de todo */
+    z-index: 100;           
 }
 
 /* Estación Inferior Izquierda */
@@ -185,7 +183,7 @@ body.juego-activo #mesa-juego {
 }
 
 /* ==========================================================================
-   3.5 CONTROLES DE INTERFAZ (BOTONES FLOTANTES)
+    CONTROLES DE INTERFAZ (BOTONES FLOTANTES)
    ========================================================================== */
 #btn-iniciar {
     display: none; 
@@ -231,8 +229,31 @@ body.juego-activo #mesa-juego {
     transform: scale(0.95);
 }
 
+/* El contenedor que flota sobre la mesa */
+.banner-inicio-partida {
+    position: fixed;      /* Flota respecto a la ventana, no al contenido */
+    top: 50%;             /* Centrado vertical */
+    left: 50%;            /* Centrado horizontal */
+    transform: translate(-50%, -50%); /* Ajuste perfecto al centro */
+    
+    background-color: rgba(0, 0, 0, 0.9);
+    color: #ffcc00;
+    padding: 2rem 3rem;
+    border: 3px solid #ffcc00;
+    border-radius: 20px;
+    z-index: 10000;       /* Por encima de absolutamente todo */
+    box-shadow: 0 0 30px rgba(0,0,0,0.8);
+    text-align: center;
+}
+
+/* Clase para que desaparezca suavemente */
+.banner-inicio-partida.desvanecer {
+    opacity: 0;
+    transition: opacity 1s ease-out;
+}
+
 /* =========================================================================
-   4. FICHAS Y ESTILO VISUAL
+    FICHAS Y ESTILO VISUAL
 ========================================================================== */
 .ficha-domino {
     background-color: #f8f8f8;
@@ -298,6 +319,7 @@ body.juego-activo #mesa-juego {
     box-shadow: 0 10px 20px rgba(255, 215, 0, 0.4);
     z-index: 1000;
 }
+
 
 /* ====================================================
 /* Media Queries */
